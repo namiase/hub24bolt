@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Package } from 'lucide-react';
 import { AuthProvider } from './hooks/useAuth';
@@ -9,11 +9,16 @@ import RecoverPassword from './components/auth/RecoverPassword';
 import AuthGuard from './components/auth/AuthGuard';
 import UserMenu from './components/UserMenu';
 import WarehouseSelector from './components/WarehouseSelector';
-import BusinessUnitManagement from './components/BusinessUnitManagement';
+import BusinessUnitList from './components/businessUnit/BusinessUnitList';
+import BusinessUnitForm from './components/businessUnit/BusinessUnitForm';
 import CustomerManagement from './components/CustomerManagement';
 import CreateShipment from './components/shipment/CreateShipment';
 
 function App() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('1');
+
   return (
     <Router>
       <AuthProvider>
@@ -24,10 +29,19 @@ function App() {
             <Route
               path="/*"
               element={
-                <ProtectedLayout>
+                <ProtectedLayout
+                  isMobileMenuOpen={isMobileMenuOpen}
+                  setIsMobileMenuOpen={setIsMobileMenuOpen}
+                  isUserMenuOpen={isUserMenuOpen}
+                  setIsUserMenuOpen={setIsUserMenuOpen}
+                  selectedWarehouse={selectedWarehouse}
+                  setSelectedWarehouse={setSelectedWarehouse}
+                >
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard onNewShipment={() => {}} />} />
-                    <Route path="/business-units" element={<BusinessUnitManagement />} />
+                    <Route path="/business-units" element={<BusinessUnitList />} />
+                    <Route path="/business-units/create" element={<BusinessUnitForm />} />
+                    <Route path="/business-units/edit/:code" element={<BusinessUnitForm />} />
                     <Route path="/customers" element={<CustomerManagement />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
@@ -41,19 +55,30 @@ function App() {
   );
 }
 
-const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
-  const [selectedWarehouse, setSelectedWarehouse] = React.useState('1');
-  const [currentView, setCurrentView] = React.useState<'dashboard' | 'business-units' | 'customers'>('dashboard');
+interface ProtectedLayoutProps {
+  children: React.ReactNode;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (open: boolean) => void;
+  isUserMenuOpen: boolean;
+  setIsUserMenuOpen: (open: boolean) => void;
+  selectedWarehouse: string;
+  setSelectedWarehouse: (warehouse: string) => void;
+}
 
+const ProtectedLayout = ({
+  children,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+  isUserMenuOpen,
+  setIsUserMenuOpen,
+  selectedWarehouse,
+  setSelectedWarehouse,
+}: ProtectedLayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar 
-        isOpen={isMobileMenuOpen} 
+        isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        onNavigate={(view) => setCurrentView(view)}
-        currentView={currentView}
       />
 
       <div className="flex-1 flex flex-col">
